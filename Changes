@@ -1,0 +1,7 @@
+Revision history for Perl extension Archive::Tyd.
+
+0.01  Sat Dec 31 14:24:01 2005
+	- Initial release
+	- original version; created by h2xs 1.23 with options
+		-X -n Archive::Tyd
+

@@ -1,0 +1,7 @@
+Changes
+Makefile.PL
+MANIFEST
+README
+test.pl
+t/Archive-Tyd.t
+lib/Archive/Tyd.pm
