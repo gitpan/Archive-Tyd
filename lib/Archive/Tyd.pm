@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Crypt::CipherSaber;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 sub new {
 	my $proto = shift;
@@ -46,6 +46,7 @@ sub openArchive {
 
 	# Read the file.
 	open (FILE, "$file");
+	binmode FILE;
 	my @data = <FILE>;
 	close (FILE);
 	chomp @data;
@@ -57,7 +58,8 @@ sub openArchive {
 
 	foreach my $line (@lines) {
 		my ($name,$bin) = split(/::/, $line, 2);
-		$bin =~ s/<<linebreak>>/\n/g;
+		$bin =~ s/<<ln>>/\n/g;
+		$bin =~ s/<<lr>>/\r/g;
 
 		$self->{files}->{$name} = $bin;
 	}
@@ -74,6 +76,10 @@ sub writeArchive {
 	my @write = ();
 	foreach my $item (keys %{$self->{files}}) {
 		print "\tAdding $item to output\n" if $self->{debug};
+
+		# Make sure the line breaks are taken care of.
+		$self->{files}->{$item} =~ s/\n/<<ln>>/g;
+		$self->{files}->{$item} =~ s/\r/<<lr>>/g;
 		push (@write, "$item" . '::' . "$self->{files}->{$item}");
 	}
 
@@ -82,6 +88,7 @@ sub writeArchive {
 	my $enc = $self->{cipher}->encrypt ($bin);
 
 	open (OUT, ">$file");
+	binmode OUT;
 	print OUT $enc;
 	close (OUT);
 
@@ -109,8 +116,8 @@ sub addFile {
 	my $filename = $self->filename ($file);
 
 	my $content = join ("<<linebreak>>",@data);
-	$content =~ s/\n/<<\\n>>/g;
-	$content =~ s/\r/<<\\r>>/g;
+	$content =~ s/\n/<<ln>>/g;
+	$content =~ s/\r/<<lr>>/g;
 
 	print "Added $filename to archive\n" if $self->{debug};
 
@@ -139,8 +146,8 @@ sub readFile {
 
 	if (exists $self->{files}->{$filename}) {
 		my $bin = $self->{files}->{$filename};
-		$bin =~ s/<<\\n>>/\n/g;
-		$bin =~ s/<<\\r>>/\r/g;
+		$bin =~ s/<<ln>>/\n/g;
+		$bin =~ s/<<lr>>/\r/g;
 		$bin =~ s/<<linebreak>>/\n/g;
 
 		print "Read $filename\n" if $self->{debug};
@@ -193,6 +200,10 @@ encrypting the results, hence a password-protected archive.
 
 B<Tyd Does:> Reading and writing of encrypted Tyd archives and file
 operations within.
+
+B<Tyd Does:> Load all files into memory. Tyd is not good as a storage device
+for a large quanitity of large files. Tyd is best for keeping small text files
+and graphics together (maybe to keep a spriteset and definitions for a game?)
 
 B<Tyd Does Not:> support directories within the archive, compression of files,
 and many other things that WinZip and GZip support.
@@ -268,6 +279,13 @@ Once the unencrypted file is ready, the entire thing is encrypted using
 L<Crypt::CipherSaber> with the password provided and written to the archive.
 
 =head1 CHANGES
+
+  Version 0.02
+  - Fixed some major bugs. In 0.01 version, reading an archive Tyd file and then
+    re-archiving it from the files in-memory, would for some reason corrupt the file.
+    This has been repaired.
+  - Carriage Returns are now filtered in and out correctly.
+  - Included Tydra--a Perl/Tk interface to Tyd Archive Viewing.
 
   Version 0.01
   - Initial Release

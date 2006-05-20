@@ -3,5 +3,6 @@ Makefile.PL
 MANIFEST
 README
 test.pl
+Tydra.pl
 t/Archive-Tyd.t
 lib/Archive/Tyd.pm
